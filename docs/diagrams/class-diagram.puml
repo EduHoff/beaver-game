@@ -1,0 +1,50 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Active Player" as Player
+actor "Eligible Opponent" as Opponent
+actor "Table / Group" as Group
+
+package "Beaver Card Game" {
+    usecase "Perform Mulligan" as UC_Mulligan
+    usecase "Play Card (0 or 1)" as UC_Play
+    usecase "Resolve Transition Effect" as UC_Transition
+
+    usecase "Draw Cards" as UC_Draw
+    usecase "Discard Cards" as UC_Discard
+    usecase "Demand Color (1 -> 1)" as UC_Demand
+
+    usecase "Trigger Overflow" as UC_Overflow
+    usecase "Achieve Stop" as UC_Stop
+    usecase "Trigger Collapse" as UC_Collapse
+
+    usecase "Determine Winner (Victory Tally)" as UC_Victory
+    usecase "Penalize Bad Conduct" as UC_Penalize
+}
+
+' Player relationships
+Player --> UC_Mulligan
+Player --> UC_Play
+UC_Play ..> UC_Transition : <<include>>
+
+' Transition effects (Extensions depending on the play)
+UC_Transition ..> UC_Draw : <<extend>>
+UC_Transition ..> UC_Discard : <<extend>>
+UC_Transition ..> UC_Demand : <<extend>>
+
+' Target interactions
+UC_Draw <-- Opponent
+UC_Discard <-- Opponent
+UC_Demand <-- Opponent
+
+' Critical states (Turn end or Line end)
+Player --> UC_Overflow
+Player --> UC_Stop
+Player --> UC_Collapse
+
+' Collective actions
+Group --> UC_Victory
+Group --> UC_Penalize
+
+@enduml
