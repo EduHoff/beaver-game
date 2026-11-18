@@ -1,0 +1,66 @@
+@startuml
+skinparam objectAttributeIconSize 0
+
+object "currentMatch: GameMatch" as match {
+  currentPlayerIndex = 0
+}
+
+object "drawPile: Deck" as draw {
+  cardsCount = 28
+  isEmpty = false
+}
+
+object "discardPile: Deck" as discard {
+  cardsCount = 12
+  isEmpty = false
+}
+
+object "alice: Player" as p1 {
+  id = "Alice"
+  state = ELIGIBLE
+}
+
+object "aliceHand: Hand" as h1 {
+  cards = [RED, BLACK, BLACK]
+  count = 3
+  hasRedCards = true
+}
+
+object "aliceSequence: Sequence" as s1 {
+  cards = [BLACK, RED, RED]
+  length = 3
+  lastCard = RED
+}
+
+object "sophia: Player" as p2 {
+  id = "Sophia"
+  state = ELIGIBLE
+}
+
+object "sophiaHand: Hand" as h2 {
+  cards = [BLACK, RED, BLACK, BLACK]
+  count = 4
+  hasRedCards = true
+}
+
+object "sophiaSequence: Sequence" as s2 {
+  cards = [RED]
+  length = 1
+  lastCard = RED
+}
+
+' Match relationships
+match *-- p1
+match *-- p2
+match *-- draw
+match *-- discard
+
+' Alice relationships
+p1 *-- h1
+p1 *-- s1
+
+' Sophia relationships
+p2 *-- h2
+p2 *-- s2
+
+@enduml
