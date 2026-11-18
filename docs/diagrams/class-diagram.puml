@@ -1,50 +1,88 @@
 @startuml
-left to right direction
+skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 
-actor "Active Player" as Player
-actor "Eligible Opponent" as Opponent
-actor "Table / Group" as Group
+package "Domain Enums" {
+    enum CardColor {
+        BLACK (0)
+        RED (1)
+    }
 
-package "Beaver Card Game" {
-    usecase "Perform Mulligan" as UC_Mulligan
-    usecase "Play Card (0 or 1)" as UC_Play
-    usecase "Resolve Transition Effect" as UC_Transition
-
-    usecase "Draw Cards" as UC_Draw
-    usecase "Discard Cards" as UC_Discard
-    usecase "Demand Color (1 -> 1)" as UC_Demand
-
-    usecase "Trigger Overflow" as UC_Overflow
-    usecase "Achieve Stop" as UC_Stop
-    usecase "Trigger Collapse" as UC_Collapse
-
-    usecase "Determine Winner (Victory Tally)" as UC_Victory
-    usecase "Penalize Bad Conduct" as UC_Penalize
+    enum PlayerState {
+        ELIGIBLE
+        STOPPED
+        COLLAPSED
+    }
 }
 
-' Player relationships
-Player --> UC_Mulligan
-Player --> UC_Play
-UC_Play ..> UC_Transition : <<include>>
+package "Core Entities" {
+    class Card {
+        - color: CardColor
+    }
 
-' Transition effects (Extensions depending on the play)
-UC_Transition ..> UC_Draw : <<extend>>
-UC_Transition ..> UC_Discard : <<extend>>
-UC_Transition ..> UC_Demand : <<extend>>
+    class Hand {
+        - cards: List<Card>
+        + add(cards: List<Card>)
+        + remove(card: Card)
+        + getCount(): int
+        + hasRedCards(): boolean
+    }
 
-' Target interactions
-UC_Draw <-- Opponent
-UC_Discard <-- Opponent
-UC_Demand <-- Opponent
+    class Sequence {
+        - cards: List<Card>
+        + appendRight(card: Card)
+        + popLeft(): Card
+        + removeAllReds()
+        + removeAllBlacks()
+        + clear()
+        + getLength(): int
+        + getLastCard(): Card
+        + getRedCount(): int
+    }
 
-' Critical states (Turn end or Line end)
-Player --> UC_Overflow
-Player --> UC_Stop
-Player --> UC_Collapse
+    class Player {
+        - id: String
+        - state: PlayerState
+        - secretHand: Hand
+        - publicSequence: Sequence
+        + performMulligan()
+        + playCard(index: int)
+        + checkOverflow()
+    }
 
-' Collective actions
-Group --> UC_Victory
-Group --> UC_Penalize
+    class Deck {
+        - cards: List<Card>
+        + shuffle()
+        + draw(amount: int): List<Card>
+        + add(cards: List<Card>)
+        + isEmpty(): boolean
+    }
+
+    class GameMatch {
+        - players: List<Player>
+        - drawPile: Deck
+        - discardPile: Deck
+        - currentPlayerIndex: int
+        + startMulliganPhase()
+        + resolveTransition(prev: Card, current: Card)
+        + checkEndCondition(): boolean
+        + tallyVictory(): Player
+    }
+}
+
+' Relationships
+GameMatch "1" *-- "2..*" Player : contains
+GameMatch "1" *-- "1" Deck : drawPile
+GameMatch "1" *-- "1" Deck : discardPile
+
+Player "1" *-- "1" Hand : owns
+Player "1" *-- "1" Sequence : owns
+
+Hand "1" o-- "*" Card : holds
+Sequence "1" o-- "*" Card : holds
+Deck "1" o-- "*" Card : holds
+
+Card -> CardColor
+Player -> PlayerState
 
 @enduml
