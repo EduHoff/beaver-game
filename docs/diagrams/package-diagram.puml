@@ -1,0 +1,46 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam componentStyle uml2
+
+package "beaver-game (Crate)" {
+
+    package "core" <<Module>> {
+        class "Card" <<Struct>>
+        class "Hand" <<Struct>>
+        class "Sequence" <<Struct>>
+        class "Deck" <<Struct>>
+        class "Player" <<Struct>>
+
+        enum "CardColor" <<Enum>>
+        enum "PlayerState" <<Enum>>
+    }
+
+    package "app" <<Module>> {
+        class "GameMatch" <<Struct>>
+        interface "TransitionHandler" <<Trait>>
+        interface "PenaltyResolver" <<Trait>>
+    }
+
+    package "network" <<Module>> {
+        class "SessionManager" <<Struct>>
+        class "ClientConnection" <<Struct>>
+    }
+
+    package "ui" <<Module>> {
+        package "views" {
+            class "BoardView" <<Struct>>
+        }
+        package "components" {
+            class "CardComponent" <<Struct>>
+            class "ActionMenu" <<Struct>>
+        }
+    }
+}
+
+' Module Dependencies (use declarations / imports)
+app ..> core : "uses domain types"
+network ..> app : "forwards actions"
+ui ..> network : "sends commands"
+ui ..> core : "renders data"
+
+@enduml
