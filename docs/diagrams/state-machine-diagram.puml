@@ -1,0 +1,53 @@
+@startuml
+skinparam StateBackgroundColor #FEFECE
+skinparam StateBorderColor #A80036
+
+state "Game Match Lifecycle" as Game {
+  [*] --> SetupPhase
+
+  SetupPhase : Deal 6 cards to each player
+  SetupPhase : Resolve Mulligans (All black cards)
+
+  SetupPhase --> InProgress : All hands accepted
+
+  InProgress : Players take turns
+  InProgress : Draw pile reshuffled from discard if empty
+
+  InProgress --> Suspended : No cards available to restock
+  InProgress --> MatchEnded : All players Stopped or Collapsed
+
+  state MatchEnded {
+    state "Victory Tally" as VictoryTally
+    state "Collective Defeat" as CollectiveDefeat
+
+    [*] --> VictoryTally : At least one player Stopped
+    [*] --> CollectiveDefeat : ALL players Collapsed
+
+    VictoryTally : 1. Longest Sequence
+    VictoryTally : 2. Red Majority
+    VictoryTally : 3. Speed
+  }
+}
+
+--
+
+state "Player Lifecycle" as PlayerState {
+  [*] --> Eligible
+
+  Eligible : Can take turns
+  Eligible : Can be targeted by effects
+
+  Eligible --> Collapsed : Enters inescapable 0->0 loop
+  Eligible --> Stopped : Hand empty after turn resolution
+
+  Stopped : Cannot take turns
+  Stopped : Cannot be targeted
+  Stopped : Sequence frozen for Tally
+
+  Collapsed : Eliminated from round
+  Collapsed : Discards all cards
+
+  Stopped --> [*]
+  Collapsed --> [*]
+}
+@enduml

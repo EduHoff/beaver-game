@@ -1,0 +1,61 @@
+@startuml
+skinparam ActivityBackgroundColor #FEFECE
+skinparam ActivityBorderColor #A80036
+skinparam ActivityDiamondBackgroundColor #FEFECE
+skinparam ActivityDiamondBorderColor #A80036
+
+start
+
+:Start Turn (Next Eligible Player);
+
+repeat :Play a Card from Hand to Sequence;
+
+  switch (Transition Type?)
+  case ( Empty Row )
+    :No effect. Starts new row;
+
+  case ( 0 -> 1 )
+    :Target player draws 3 or 6 cards;
+
+  case ( 1 -> 0 )
+    :Target discards 1 Red\nor 2 blind cards;
+
+  case ( 1 -> 1 )
+    :Demand color for the\nnext player's turn;
+
+  case ( 1 -> 1 -> 1 )
+    :Discard 3 Reds OR\nRemove 4 from sequence & Draw 4;
+
+  case ( 0 -> 0 )
+    :Return oldest sequence card to hand;
+    if (Sequence is ONLY BLACK \nAND played 3 consecutive blacks?) then (Yes)
+      :Trigger Collapse;
+      :Discard Sequence and Hand;
+      :Player becomes Ineligible;
+      stop
+    else (No)
+      :Force immediate new play (Cascade);
+    endif
+  endswitch
+
+repeat while (Pending mandatory plays from 0->0?) is (Yes)
+
+:Resolve all ongoing effects;
+
+if (Hand has 13 or more cards?) then (Yes)
+  :Trigger Overflow Penalty;
+  :Wipe Reds (or Blacks) from Sequence;
+  :Opponent reduces your hand to 3 cards;
+else (No)
+endif
+
+if (Hand is completely empty?) then (Yes)
+  :Trigger Stop;
+  :Player becomes Ineligible (Victory Tally);
+else (No)
+endif
+
+:End Turn;
+
+stop
+@enduml
