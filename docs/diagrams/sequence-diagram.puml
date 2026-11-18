@@ -1,0 +1,78 @@
+@startuml
+skinparam maxMessageSize 150
+skinparam sequenceMessageAlign center
+
+actor "Alice (Active)" as alice
+participant "game: GameMatch" as game
+participant "aSeq: Sequence" as seq
+participant "aHand: Hand" as hand
+participant "discard: Deck" as discard
+actor "Sophia (Next)" as sophia
+
+alice -> game : playCard(BLACK)
+activate game
+
+game -> seq : appendRight(BLACK)
+activate seq
+seq --> game : previousCard = BLACK
+deactivate seq
+
+note over game : 0 -> 0 Transition Triggered
+
+loop 0 -> 0 Effect Cascade
+    game -> seq : popLeft()
+    activate seq
+    note left of seq : Retrieves the\noldest card
+    seq --> game : removedCard
+    deactivate seq
+
+    game -> hand : add(removedCard)
+    activate hand
+    hand --> game : success
+    deactivate hand
+
+    game -> alice : forceNextPlay()
+    alice --> game : nextCard = BLACK
+
+    alice -> game : playCard(nextCard)
+
+    game -> seq : appendRight(nextCard)
+    activate seq
+    seq --> game : previousCard
+    deactivate seq
+
+    alt sequence == ONLY BLACK && additional blacks == 3
+        game -> game : triggerCollapse()
+        activate game
+        note over game : Player entered an\ninescapable loop.
+
+        game -> seq : clear()
+        activate seq
+        seq --> game : seqCards
+        deactivate seq
+
+        game -> hand : clear()
+        activate hand
+        hand --> game : handCards
+        deactivate hand
+
+        game -> discard : add(seqCards + handCards)
+        activate discard
+        discard --> game : success
+        deactivate discard
+
+        game -> alice : setState(COLLAPSED)
+        deactivate game
+
+        break End of Turn by Elimination
+            game -> game : endTurn()
+        end
+
+    else nextCard == RED
+        note over game : Interrupts the 0->0 loop.\nStarts 0->1 transition.
+    end
+end
+
+game -> sophia : startTurn()
+deactivate game
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+skinparam objectAttributeIconSize 0
+allowmixing
+
+actor "Alice" as alice
+object "game : GameMatch" as game
+object "aSeq : Sequence" as seq
+object "aHand : Hand" as hand
+object "discard : Deck" as discard
+
+alice -right-> game : "1: playCard(BLACK)\n1.5: playCard(BLACK) [Forced]"
+game -down-> seq : "1.1: appendRight(BLACK)\n1.2: popLeft()\n1.5.1: appendRight(BLACK)\n1.6.1: clear()"
+game -left-> hand : "1.3: add(removedCard)\n1.6.2: clear()"
+game -up-> alice : "1.4: forceNextPlay()\n1.6.4: setState(COLLAPSED)"
+game -up-> game : "1.6: [If 3rd additional BLACK] triggerCollapse()"
+game -right-> discard : "1.6.3: add(allCards)"
+
+note bottom of alice
+  Sophia receives no messages
+  in this block, as the interaction
+  is an internal loop for Alice.
+end note
+
+@enduml
